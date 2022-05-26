@@ -10,6 +10,15 @@ def unzip(_file=return_zip):
     _file = zipfile.ZipFile(_file)
     _file.extractall('.')
     _file.close()
+    
+
+# Load complete CO voter file
+def voters_to_df(bq_query_str=bq_query_str):
+    _df = pd.read_gbq(bq_query_str, project_id=bq_project_id, location=bq_project_location, credentials=bq_account_creds, progress_bar_type='tqdm')
+    print(f"Total Registration: {len(_df):.0f}")
+
+    return _df
+
 
 # Load the Colorado outstanding ballot file into a dataframe
 def returns_to_df(return_txt_file):
@@ -33,7 +42,7 @@ def returns_to_df(return_txt_file):
 
     # Output the number of rows/total voters
     print("Total Ballots Returned: {:,}".format(len(ballots_sent_df)))
-
+    
     return ballots_sent_df
 
 return_txt_file = return_zip.split('.')[0] + '.txt'
