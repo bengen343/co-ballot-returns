@@ -13,9 +13,26 @@ def unzip(_file=return_zip):
     
 
 # Load complete CO voter file
-def voters_to_df(bq_query_str=bq_query_str):
-    _df = pd.read_gbq(bq_query_str, project_id=bq_project_id, location=bq_project_location, credentials=bq_account_creds, progress_bar_type='tqdm')
+def voters_to_df(bq_query_str=bq_voter_str):
+    _df = pd.read_gbq(bq_query_str, project_id=bq_project_id, location=bq_project_location, credentials=bq_credentials, progress_bar_type='tqdm')
     print(f"Total Registration: {len(_df):.0f}")
+
+    # Replace minor party designations with 'OTH'
+    _df.loc[((_df['PARTY'] != 'REP') & (_df['PARTY'] != 'DEM') & (_df['PARTY'] != 'UAF')), 'PARTY'] = 'OTH'
+
+    return _df
+
+
+# Load vote history dataframe with elections of interest
+def vote_history_to_df(bq_query_str=bq_history_str):
+    _df = pd.read_gbq(bq_query_str, project_id=bq_project_id, location=bq_project_location, credentials=bq_credentials)
+    print(f"Total Vote History Records: {len(_df):.0f}")
+
+    # Collapse history into single binary row
+    print("Collapsing history into binary values...")
+    _df = pd.get_dummies(_df.set_index('VOTER_ID')['ELECTION_DATE'])
+    _df = _df.reset_index().groupby('VOTER_ID').sum()
+    _df.reset_index(level=0, inplace=True)
 
     return _df
 
@@ -44,8 +61,3 @@ def returns_to_df(return_txt_file):
     print("Total Ballots Returned: {:,}".format(len(ballots_sent_df)))
     
     return ballots_sent_df
-
-return_txt_file = return_zip.split('.')[0] + '.txt'
-
-unzip(_file=return_zip)
-test_df = returns_to_df(return_txt_file)
