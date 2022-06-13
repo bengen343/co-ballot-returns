@@ -131,6 +131,7 @@ dmypy.json
 # Large files
 *.zip
 *.txt
+*.xlsx
 
 # Secrets
 *.json
