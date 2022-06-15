@@ -19,4 +19,4 @@ COPY main.py sos_fetch.py load_co_returns.py transform_co_returns.py analyze_co_
 # For environments with multiple CPU cores, increase the number of workers
 # to be equal to the cores available.
 # Timeout is set to 0 to disable the timeouts of the workers to allow Cloud Run to handle instance scaling.
-CMD exec gunicorn --bind :$PORT --workers 1 --threads 1 --timeout 0 main:app
+CMD exec gunicorn --bind :8080 --workers 1 --threads 1 --timeout 0 main:app
