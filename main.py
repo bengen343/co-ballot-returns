@@ -33,13 +33,14 @@ def main():
     voters_df = calc_race(voters_df)
     voters_df = calc_targets(voters_df, target_files_lst)
 
-    # Narrow voter filedataframe to only data of interest
-    voters_df = voters_df[['VOTER_ID', 'PARTY', 'GENDER', 'PVP', 'PVG', 'VOTED_PARTY', 'TARGET','RACE', 'AGE_RANGE','CONGRESSIONAL', 'STATE_SENATE', 'STATE_HOUSE', 'COUNTY', 'PRECINCT', 'RESIDENTIAL_CITY', 'RECEIVED']]
-
     # Change the values for UAF vote choice so they don't conflict with party affiliation
     for party in voters_df['VOTED_PARTY'].unique():
         if not pd.isnull(party):
             voters_df.loc[voters_df['VOTED_PARTY'] == party, 'VOTED_PARTY'] = ('Voted ' + party)
+
+    # Narrow voter filedataframe to only data of interest
+    voters_df = voters_df.drop_duplicates('VOTER_ID')
+    voters_df = voters_df[['VOTER_ID', 'PARTY', 'GENDER', 'PVP', 'PVG', 'VOTED_PARTY', 'TARGET','RACE', 'AGE_RANGE','CONGRESSIONAL', 'STATE_SENATE', 'STATE_HOUSE', 'COUNTY', 'PRECINCT', 'RESIDENTIAL_CITY', 'RECEIVED']]
 
     # Run crosstabs on all registered voters
     registration_crosstabs_df = calc_crosstabs(voters_df, crosstab_criteria_lst=crosstab_criteria_lst)
