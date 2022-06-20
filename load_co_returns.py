@@ -4,6 +4,26 @@ import pandas as pd
 
 from config import *
 
+def create_bq_schema(_df):
+    schema_list = []
+    for column in list(_df):
+        if 'DATE' in column:
+            sql_type = 'DATETIME'
+        else:
+            sql_type = 'STRING'
+                
+        if column == 'VOTER_ID':
+            sql_mode = 'REQUIRED'
+        else:
+            sql_mode = 'NULLABLE'
+            
+        schema_list.append({'name':  column, 'type': sql_type, 'mode': sql_mode})
+    
+    return schema_list
+
+def save_to_bq(_df, bq_table_schema, table_id=bq_table_id, project_id=bq_project_id ):
+    _df.to_gbq(destination_table=table_id, project_id=project_id, if_exists='replace', table_schema=bq_table_schema, credentials=bq_credentials)
+
 
 # Unzip return file
 def unzip(_file=return_zip):
@@ -59,6 +79,15 @@ def returns_to_df(return_txt_file):
     ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE'].fillna(ballots_sent_df['IN_PERSON_VOTE_DATE'], inplace=True)
     ballots_sent_df['RECEIVED'] = ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE']
 
+    # Save the returns up to BigQuery
+    for column in list(ballots_sent_df):
+        if 'DATE' in column:
+            ballots_sent_df[column] = pd.to_datetime(ballots_sent_df[column], format='%m/%d/%Y', infer_datetime_format=True)
+        else:
+            ballots_sent_df[column] = ballots_sent_df[column].astype('str')
+    bq_table_schema = create_bq_schema(ballots_sent_df)
+    save_to_bq(ballots_sent_df, bq_table_schema, bq_return_table_id, bq_project_id)
+
     # Narrow returned ballots frame to only those that have come back
     ballots_sent_df = ballots_sent_df[(ballots_sent_df['RECEIVED'].notnull())]
 
@@ -67,6 +96,7 @@ def returns_to_df(return_txt_file):
 
     # Make the date of voting column formatting standardized
     ballots_sent_df['RECEIVED'] = pd.to_datetime(ballots_sent_df['RECEIVED']).dt.strftime('%m/%d/%Y')
+    ballots_sent_df['VOTER_ID'] = ballots_sent_df['VOTER_ID'].astype('int64')
 
     # Output the number of rows/total voters
     print("Total Ballots Returned: {:,}".format(len(ballots_sent_df)))
