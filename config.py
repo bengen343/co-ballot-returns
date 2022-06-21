@@ -71,7 +71,7 @@ FROM `''' + bq_table_id + '`'
 
 bq_history_str = '''
 SELECT *
-FROM `cpc-datawarehouse-51210.co_voterfile.vote_history`
+FROM `cpc-datawarehouse-51210.co_voterfile.vote-history`
 WHERE ELECTION_DATE IN (''' + election_str + ''')
     OR ELECTION_DATE IS NULL'''
 
