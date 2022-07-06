@@ -17,6 +17,7 @@ def calc_crosstabs(_df, crosstab_criteria_lst):
             except Exception as e:
                 print(e)
 
+        _horizontal_df = _horizontal_df.loc[:,~_horizontal_df.columns.duplicated(keep=False)].copy()
         _crosstabs_df = pd.concat([_crosstabs_df, _horizontal_df], axis=0, sort=False)
 
     # Add the precinct crosstabs only to the vertical crosstab axis
@@ -29,6 +30,7 @@ def calc_crosstabs(_df, crosstab_criteria_lst):
         except Exception as e:
             print(e)
 
+    _horizontal_df = _horizontal_df.loc[:,~_horizontal_df.columns.duplicated(keep=False)].copy()
     _crosstabs_df = pd.concat([_crosstabs_df, _horizontal_df], axis=0, sort=False)
 
     _crosstabs_df = _crosstabs_df[_crosstabs_df.index != 'All']
