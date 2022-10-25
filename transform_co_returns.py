@@ -80,7 +80,7 @@ def calc_race(_df):
     return _df
 
 def calc_targets(output_df, target_files_lst):
-    _targets_df = pd.DataFrame()
+    _targets_df = pd.DataFrame(columns=['State Voter ID'])
     _fs = gcsfs.GCSFileSystem(project=bq_project_id)
 
     for _file in target_files_lst:
@@ -90,7 +90,7 @@ def calc_targets(output_df, target_files_lst):
         with _fs.open(_file) as _f:
             _df = pd.read_csv(_f)
 
-        _df['TARGET'] = _f_str
+        _df[_f_str] = _f_str
 
         _targets_df = pd.merge(_targets_df, _df, how='outer', on='State Voter ID')
 
