@@ -40,7 +40,7 @@ def main():
 
     # Narrow voter filedataframe to only data of interest
     voters_df = voters_df.drop_duplicates('VOTER_ID')
-    voters_df = voters_df[['VOTER_ID', 'PARTY', 'GENDER', 'PVP', 'PVG', 'VOTED_PARTY', 'TARGET','RACE', 'AGE_RANGE','CONGRESSIONAL', 'STATE_SENATE', 'STATE_HOUSE', 'COUNTY', 'PRECINCT', 'RESIDENTIAL_CITY', 'RECEIVED']]
+    voters_df = voters_df[['VOTER_ID',  'PRECINCT', 'RECEIVED'] + crosstab_criteria_lst]
 
     # Run crosstabs on all registered voters
     registration_crosstabs_df = calc_crosstabs(voters_df, crosstab_criteria_lst=crosstab_criteria_lst)
