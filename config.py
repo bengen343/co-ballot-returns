@@ -18,7 +18,10 @@ target_files_lst = [
     'gs://co-ballot-returns-artifacts/2022-general-universe-2.csv',
     'gs://co-ballot-returns-artifacts/2022-general-universe-3.csv',
     'gs://co-ballot-returns-artifacts/2022-general-universe-4.csv', 
-    'gs://co-ballot-returns-artifacts/2022-general-universe-5.csv'
+    'gs://co-ballot-returns-artifacts/2022-general-universe-5.csv',
+    'gs://co-ballot-returns-artifacts/2022-general-affinity-1.csv',
+    'gs://co-ballot-returns-artifacts/2022-general-affinity-2.csv',
+    'gs://co-ballot-returns-artifacts/2022-general-affinity-3.csv'
 ]
 
 # Voter file variables
