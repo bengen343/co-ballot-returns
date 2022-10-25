@@ -74,7 +74,8 @@ def main():
 
     # Send the Excel file to Google Cloud Storage
     gcs_put(crosstabs_xlsx_file)
-    print("Updated successfully.")
+    
+    return("Updated successfully.")
 
 if __name__ == '__main__':
     from waitress import serve
