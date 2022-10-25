@@ -7,8 +7,19 @@ from google.oauth2 import service_account
 # FTP variables
 ftp_address = 'ftps.sos.state.co.us'
 ftp_directory = r'/CE-068_Voters_With_Ballots_List_Public/'
-return_zip = r'CE-068_Voters_With_Ballots_List_Public_28Jun_600017176_null.zip'
+return_zip = r'CE-068_Voters_With_Ballots_List_Public_08Nov_600017156_null.zip'
 return_txt_file = return_zip.split('.')[0] + '.txt'
+
+# Google Cloud Storage/Files Variables
+crosstabs_xlsx_file = r'2022COGeneralBallotsCast.xlsx'
+
+target_files_lst = [
+    'gs://co-ballot-returns-artifacts/2022-general-universe-1.csv',
+    'gs://co-ballot-returns-artifacts/2022-general-universe-2.csv',
+    'gs://co-ballot-returns-artifacts/2022-general-universe-3.csv',
+    'gs://co-ballot-returns-artifacts/2022-general-universe-4.csv', 
+    'gs://co-ballot-returns-artifacts/2022-general-universe-5.csv'
+]
 
 # Voter file variables
 # Select elections of interest
@@ -26,8 +37,7 @@ crosstab_criteria_lst = [
     'GENDER', 
     'PVP', 
     'PVG', 
-    'VOTED_PARTY', 
-    'TARGET', 
+    'VOTED_PARTY',  
     'RACE', 
     'AGE_RANGE', 
     'CONGRESSIONAL', 
@@ -35,10 +45,10 @@ crosstab_criteria_lst = [
     'STATE_HOUSE', 
     'COUNTY', 
     'RESIDENTIAL_CITY'
-]
+] + [x.split('/')[-1].split('.')[0] for x in target_files_lst]
 
 target_geographies_dict = {
-    'Congressional 8': 'CONGRESSIONAL'
+    'State Senate 20': 'STATE_SENATE'
 }
 
 # BQ Variables
@@ -78,13 +88,3 @@ WHERE ELECTION_DATE IN (''' + election_str + ''')
 # Establish BigQuery credentials
 bq_account_creds = json.loads(os.environ.get('BQ_ACCOUNT_CREDS'))
 bq_credentials = service_account.Credentials.from_service_account_info(bq_account_creds, scopes=["https://www.googleapis.com/auth/cloud-platform"])
-
-# Google Cloud Storage/Files Variables
-crosstabs_xlsx_file = r'2022COPrimaryBallotsCast.xlsx'
-
-target_files_lst = [
-    'gs://co-ballot-returns-artifacts/2022-co-primary-universe-kulmann-a.csv',
-    'gs://co-ballot-returns-artifacts/2022-co-primary-universe-kulmann-b.csv',
-    'gs://co-ballot-returns-artifacts/2022-co-primary-universe-odea-a.csv',
-    'gs://co-ballot-returns-artifacts/2022-co-primary-universe-odea-b.csv'
-]

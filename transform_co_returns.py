@@ -92,8 +92,8 @@ def calc_targets(output_df, target_files_lst):
 
         _df['TARGET'] = _f_str
 
-        _targets_df = pd.concat([_targets_df, _df], axis=0)
+        _targets_df = pd.merge(_targets_df, _df, how='outer', on='State Voter ID')
 
-    output_df = pd.merge(output_df, _targets_df, how='left', on='VOTER_ID')
+    output_df = pd.merge(output_df, _targets_df, how='left', left_on='VOTER_ID', right_on='State Voter ID')
 
     return output_df

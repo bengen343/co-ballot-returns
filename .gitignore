@@ -132,6 +132,8 @@ dmypy.json
 *.zip
 *.xlsx
 CE-068_Voters_With_Ballots_List_Public_28Jun_600017176_null.txt
+CE-068_Voters_With_Ballots_List_Public_08Nov_600017156_null.txt
 
 # Secrets
 *.json
+*.p12
