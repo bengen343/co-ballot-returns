@@ -79,6 +79,9 @@ def returns_to_df(return_txt_file):
     ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE'].fillna(ballots_sent_df['IN_PERSON_VOTE_DATE'], inplace=True)
     ballots_sent_df['RECEIVED'] = ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE']
 
+    # Replace minor party designations with 'OTH'
+    ballots_sent_df.loc[((ballots_sent_df['PARTY'] != 'REP') & (ballots_sent_df['PARTY'] != 'DEM') & (ballots_sent_df['PARTY'] != 'UAF')), 'PARTY'] = 'OTH'
+
     # Save the returns up to BigQuery
     for column in list(ballots_sent_df):
         if 'DATE' in column:
