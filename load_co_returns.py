@@ -94,6 +94,7 @@ def returns_to_df(return_txt_file):
                     bad_value = str(e).split(': ')[1]
                     print(f"{e}. Dropping record that contains bad value: {bad_value}")
                     ballots_sent_df = ballots_sent_df.drop(ballots_sent_df.index[ballots_sent_df[column] == bad_value].tolist())
+                    ballots_sent_df[column] = pd.to_datetime(ballots_sent_df[column], format='%m/%d/%Y', infer_datetime_format=True)                
                 else:
                     raise
         else:
