@@ -78,6 +78,10 @@ def returns_to_df(return_txt_file):
 
     # Create a new column that unifies the in-person & mail-in return vote dates
     print("Setting return data types.")
+    
+    # This line is a hard coded fix for some bad data, remove it in the future:
+    ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE'] = ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE'].replace('11/06/0202', '11/06/2022')
+    
     ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE'].fillna(ballots_sent_df['IN_PERSON_VOTE_DATE'], inplace=True)
     ballots_sent_df['RECEIVED'] = ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE']
 
@@ -92,7 +96,7 @@ def returns_to_df(return_txt_file):
             except Exception as e:
                 if 'bounds' in str(e):
                     bad_value = str(e).split(': ')[1]
-                    print(f"{e}. Dropping record that contains bad value: {bad_value}")
+                    print(f"{e}. Dropping record that contains bad value: {bad_value} from {column}.")
                     ballots_sent_df = ballots_sent_df.drop(ballots_sent_df.index[ballots_sent_df[column] == bad_value].tolist())
                     ballots_sent_df[column] = pd.to_datetime(ballots_sent_df[column], format='%m/%d/%Y', infer_datetime_format=True)                
                 else:
