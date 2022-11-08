@@ -72,10 +72,12 @@ def vote_history_to_df(bq_query_str=bq_history_str):
 def returns_to_df(return_txt_file):
     
     # Import returned ballots to dataframe
+    print("Loading returns to dataframe.")
     ballots_sent_df = pd.DataFrame()
     ballots_sent_df = pd.read_csv (return_txt_file, sep='|', encoding='cp437', index_col=None, header=0, low_memory=False, error_bad_lines=False)
 
     # Create a new column that unifies the in-person & mail-in return vote dates
+    print("Setting return data types.")
     ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE'].fillna(ballots_sent_df['IN_PERSON_VOTE_DATE'], inplace=True)
     ballots_sent_df['RECEIVED'] = ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE']
 
@@ -85,9 +87,19 @@ def returns_to_df(return_txt_file):
     # Save the returns up to BigQuery
     for column in list(ballots_sent_df):
         if 'DATE' in column:
-            ballots_sent_df[column] = pd.to_datetime(ballots_sent_df[column], format='%m/%d/%Y', infer_datetime_format=True)
+            try:
+                ballots_sent_df[column] = pd.to_datetime(ballots_sent_df[column], format='%m/%d/%Y', infer_datetime_format=True)
+            except Exception as e:
+                if 'bounds' in str(e):
+                    bad_value = str(e).split(': ')[1]
+                    print(f"{e}. Dropping record that contains bad value: {bad_value}")
+                    ballots_sent_df = ballots_sent_df.drop(ballots_sent_df.index[ballots_sent_df[column] == bad_value].tolist())
+                else:
+                    raise
         else:
             ballots_sent_df[column] = ballots_sent_df[column].astype('str')
+    
+    print("Uploading returns to BigQuery.")
     bq_table_schema = create_bq_schema(ballots_sent_df)
     save_to_bq(ballots_sent_df, bq_table_schema, bq_return_table_id, bq_project_id)
 
