@@ -81,6 +81,7 @@ def returns_to_df(return_txt_file):
     
     # This line is a hard coded fix for some bad data, remove it in the future:
     ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE'] = ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE'].replace('11/06/0202', '11/06/2022')
+    ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE'] = ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE'].replace('11/08/0200', '11/08/2022')
     
     ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE'].fillna(ballots_sent_df['IN_PERSON_VOTE_DATE'], inplace=True)
     ballots_sent_df['RECEIVED'] = ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE']
