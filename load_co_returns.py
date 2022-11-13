@@ -88,9 +88,9 @@ def returns_to_df(return_txt_file):
 
     # Replace minor party designations with 'OTH'
     ballots_sent_df.loc[((ballots_sent_df['PARTY'] != 'REP') & (ballots_sent_df['PARTY'] != 'DEM') & (ballots_sent_df['PARTY'] != 'UAF')), 'PARTY'] = 'OTH'
-    ballots_sent_df.loc[((ballots_sent_df['PREFERENCE'] != 'REP') & (ballots_sent_df['PREFERENCE'] != 'DEM') & (ballots_sent_df['PREFERENCE'] != 'UAF')), 'PREFERENCE'] = 'OTH'
+    ballots_sent_df.loc[((ballots_sent_df['PREFERENCE'] != 'REP') & (ballots_sent_df['PREFERENCE'] != 'DEM') & (ballots_sent_df['PREFERENCE'] != 'UAF') & (~ballots_sent_df['PREFERENCE'].isna())), 'PREFERENCE'] = 'OTH'
     ballots_sent_df['PREFERENCE'] = ballots_sent_df['PREFERENCE'] + ' Pref'
-    ballots_sent_df.loc[((ballots_sent_df['VOTED_PARTY'] != 'REP') & (ballots_sent_df['VOTED_PARTY'] != 'DEM') & (ballots_sent_df['VOTED_PARTY'] != 'UAF')), 'VOTED_PARTY'] = 'OTH'
+    ballots_sent_df.loc[((ballots_sent_df['VOTED_PARTY'] != 'REP') & (ballots_sent_df['VOTED_PARTY'] != 'DEM') & (ballots_sent_df['VOTED_PARTY'] != 'UAF') & (~ballots_sent_df['VOTED_PARTY'].isna())), 'VOTED_PARTY'] = 'OTH'
     ballots_sent_df['VOTED_PARTY'] = ballots_sent_df['VOTED_PARTY'] + ' Voted'
 
     # Save the returns up to BigQuery
