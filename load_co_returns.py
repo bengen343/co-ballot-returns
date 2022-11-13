@@ -117,7 +117,7 @@ def returns_to_df(return_txt_file):
     ballots_sent_df = ballots_sent_df[(ballots_sent_df['RECEIVED'].notnull())]
 
     # Narrow returned ballots data frame to only date returned and Voter ID
-    ballots_sent_df = ballots_sent_df[['VOTER_ID', 'RECEIVED', 'VOTED_PARTY']]
+    ballots_sent_df = ballots_sent_df[['VOTER_ID', 'RECEIVED', 'VOTE_METHOD', 'VOTED_PARTY']]
 
     # Make the date of voting column formatting standardized
     ballots_sent_df['RECEIVED'] = pd.to_datetime(ballots_sent_df['RECEIVED']).dt.strftime('%m/%d/%Y')
