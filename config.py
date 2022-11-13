@@ -36,11 +36,13 @@ election_str = election_str + '\''
 election_str = election_str[4:]
 
 crosstab_criteria_lst = [
-    'PARTY', 
-    'GENDER', 
+    'PARTY',
+    'PREFERENCE', 
+    'VOTED_PARTY', 
+    'VOTE_METHOD',
     'PVP', 
-    'PVG', 
-    'VOTED_PARTY',  
+    'PVG',
+    'GENDER',  
     'RACE', 
     'AGE_RANGE', 
     'CONGRESSIONAL', 
