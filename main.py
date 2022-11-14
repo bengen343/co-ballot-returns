@@ -21,16 +21,11 @@ def main():
 
     # Load the voters and their voting history from your data ware house
     voters_df = voters_to_df(bq_query_str=bq_voter_str)
-    vote_history_df = vote_history_to_df(bq_query_str=bq_history_str)
 
     # Match the various data sources together
-    voters_df = pd.merge(voters_df, vote_history_df, how='left', on='VOTER_ID')
     voters_df = pd.merge(voters_df, returns_df, how='left', on='VOTER_ID')
 
     # Augment the voter registration data with additional demographic information
-    voters_df = calc_pv(voters_df, generals_lst=generals_lst, primaries_lst=primaries_lst)
-    voters_df = calc_age(voters_df)
-    voters_df = calc_race(voters_df)
     voters_df = calc_targets(voters_df, target_files_lst)
 
     # Change the values for UAF vote choice so they don't conflict with party affiliation
