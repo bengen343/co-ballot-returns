@@ -39,6 +39,8 @@ def voters_to_df(bq_query_str=bq_voter_str):
 
     # Replace minor party designations with 'OTH'
     _df.loc[((_df['PARTY'] != 'REP') & (_df['PARTY'] != 'DEM') & (_df['PARTY'] != 'UAF')), 'PARTY'] = 'OTH'
+    _df.loc[((_df['PREFERENCE'] != 'REP') & (_df['PREFERENCE'] != 'DEM') & (_df['PREFERENCE'] != 'UAF') & (~_df['PREFERENCE'].isna())), 'PREFERENCE'] = 'OTH'
+    _df['PREFERENCE'] = _df['PREFERENCE'] + ' Pref'
 
     _df = _df[_df['VOTER_ID'] != 'nan']
     _df['VOTER_ID'] =  _df['VOTER_ID'].astype('float').astype('int64')
