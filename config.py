@@ -75,13 +75,17 @@ SELECT
     RESIDENTIAL_CITY,
     BIRTH_YEAR,
     GENDER,
+    RACE,
+    AGE_RANGE,
     PRECINCT,
     PARTY,
     REGISTRATION_DATE,
     PREFERENCE,
     CONGRESSIONAL,
     STATE_SENATE,
-    STATE_HOUSE
+    STATE_HOUSE,
+    PVG,
+    PVP
 FROM `''' + bq_table_id + '`'
 
 bq_history_str = '''
