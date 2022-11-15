@@ -29,7 +29,8 @@ def create_bq_schema(_df):
 def save_to_bq(_df, bq_table_schema, table_id, project_id=bq_project_id ):
     _df.to_gbq(destination_table=table_id, project_id=project_id, if_exists='replace', table_schema=bq_table_schema, credentials=bq_credentials)
 
-
+# Use storage API to read in voter file table from BigQuery.
+# In the future update this to use multiple threads for better speed.
 def read_bq_table(table_id: str, selected_fields: list):
     table = f"projects/{bq_project_id}/datasets/{bq_dataset}/tables/{table_id}"
 
@@ -73,42 +74,19 @@ def unzip(_file=return_zip):
 # Load complete CO voter file
 def voters_to_df():
     _df = read_bq_table(bq_voters_table_name, voter_file_column_lst)
-    #_df = pd.read_gbq(bq_query_str, project_id=bq_project_id, location=bq_project_location, credentials=bq_credentials, progress_bar_type='tqdm')
     print(f"Total Registration: {len(_df):.0f}")
 
     # Clean up voter file data types
     _df = _df[_df['VOTER_ID'] != 'nan']
     _df = _df.replace('nan', np.nan)
     _df['VOTER_ID'] =  _df['VOTER_ID'].astype('float').astype('int64')
-    #_df['BIRTH_YEAR'] = _df['BIRTH_YEAR'].astype('float').astype('int64')
-
+    
     # Replace minor party designations with 'OTH'
     _df.loc[((_df['PARTY'] != 'REP') & (_df['PARTY'] != 'DEM') & (_df['PARTY'] != 'UAF')), 'PARTY'] = 'OTH'
     _df.loc[((_df['PREFERENCE'] != 'REP') & (_df['PREFERENCE'] != 'DEM') & (_df['PREFERENCE'] != 'UAF') & (~_df['PREFERENCE'].isna())), 'PREFERENCE'] = 'OTH'
     _df['PREFERENCE'] = _df['PREFERENCE'] + ' Pref'
     
     return _df
-
-
-# Load vote history dataframe with elections of interest
-# def vote_history_to_df(bq_query_str=bq_history_str):
-#     _df = pd.read_gbq(bq_query_str, project_id=bq_project_id, location=bq_project_location, credentials=bq_credentials, progress_bar_type='tqdm')
-#     print(f"Total Vote History Records: {len(_df):.0f}")
-
-#     # Collapse history into single binary row
-#     _df = pd.get_dummies(_df.set_index('VOTER_ID')['ELECTION_DATE'])
-#     _df = _df.reset_index().groupby('VOTER_ID').sum()
-#     _df.reset_index(level=0, inplace=True)
-
-#     # Fix VOTER_ID datatype
-#     _df['VOTER_ID'] = _df['VOTER_ID'].astype('int64')
-
-#     # Reset column headings to strings
-#     columns_lst = list(_df)
-#     columns_lst = ['VOTER_ID'] + [x.date().strftime('%Y-%m-%d') for x in columns_lst[1:]]
-#     _df.columns = columns_lst
-
-#     return _df
 
 
 # Load the Colorado outstanding ballot file into a dataframe
@@ -122,11 +100,12 @@ def returns_to_df(return_txt_file):
     # Create a new column that unifies the in-person & mail-in return vote dates
     print("Setting return data types.")
     
-    # This line is a hard coded fix for some bad data, remove it in the future:
+    # These lines are a hard coded fix for some bad data, remove them in the future:
     ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE'] = ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE'].replace('11/06/0202', '11/06/2022')
     ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE'] = ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE'].replace('11/08/0200', '11/08/2022')
     ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE'] = ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE'].replace('11/08/0202', '11/08/2022')
     
+    # Set a master date column for when the voter voted
     ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE'].fillna(ballots_sent_df['IN_PERSON_VOTE_DATE'], inplace=True)
     ballots_sent_df['RECEIVED'] = ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE']
 
@@ -155,7 +134,7 @@ def returns_to_df(return_txt_file):
     save_to_bq(ballots_sent_df, bq_table_schema, bq_return_table_id, bq_project_id)
 
     # Narrow returned ballots frame to only those that have come back
-    ballots_sent_df = ballots_sent_df[(ballots_sent_df['RECEIVED'].notnull())]
+    ballots_sent_df = ballots_sent_df[ballots_sent_df['RECEIVED'] != 'nan']
 
     # Narrow returned ballots data frame to only return info
     ballots_sent_df = ballots_sent_df[['VOTER_ID', 'RECEIVED', 'VOTE_METHOD', 'VOTED_PARTY']]
@@ -165,6 +144,6 @@ def returns_to_df(return_txt_file):
     ballots_sent_df['VOTER_ID'] = ballots_sent_df['VOTER_ID'].astype('int64')
 
     # Output the number of rows/total voters
-    print("Total Ballots Returned: {:,}".format(len(ballots_sent_df)))
+    print(f"Total Ballots Returned: {len(ballots_sent_df):,}")
     
     return ballots_sent_df
