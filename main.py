@@ -4,10 +4,9 @@ from flask import Flask
 from analyze_co_returns import calc_crosstabs
 from config import *
 from gcs_put import gcs_put
-from load_co_returns import (returns_to_df, unzip, vote_history_to_df,
-                             voters_to_df)
+from load_co_returns import returns_to_df, unzip, voters_to_df
 from sos_fetch import sos_fetch
-from transform_co_returns import calc_age, calc_pv, calc_race, calc_targets
+from transform_co_returns import calc_targets
 
 app = Flask(__name__)
 
@@ -20,7 +19,7 @@ def main():
     returns_df = returns_to_df(return_txt_file)
 
     # Load the voters and their voting history from your data ware house
-    voters_df = voters_to_df(bq_query_str=bq_voter_str)
+    voters_df = voters_to_df()
 
     # Match the various data sources together
     voters_df = pd.merge(voters_df, returns_df, how='left', on='VOTER_ID')
@@ -35,7 +34,7 @@ def main():
 
     # Narrow voter filedataframe to only data of interest
     voters_df = voters_df.drop_duplicates('VOTER_ID')
-    voters_df = voters_df[['VOTER_ID',  'PRECINCT', 'RECEIVED'] + crosstab_criteria_lst]
+    voters_df = voters_df[voter_file_column_lst + crosstab_criteria_lst + ['RECEIVED']]
 
     # Run crosstabs on all registered voters
     registration_crosstabs_df = calc_crosstabs(voters_df, crosstab_criteria_lst=crosstab_criteria_lst)

@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import date
+from datetime import date, timedelta
 
 from google.oauth2 import service_account
 
@@ -35,11 +35,11 @@ target_files_lst = [
 # election_str = election_str + '\''
 # election_str = election_str[4:]
 
-crosstab_criteria_lst = [
+
+
+demographic_criteria_lst = [
     'PARTY',
-    'PREFERENCE', 
-    'VOTED_PARTY', 
-    'VOTE_METHOD',
+    'PREFERENCE',
     'PVP', 
     'PVG',
     'GENDER',  
@@ -50,7 +50,10 @@ crosstab_criteria_lst = [
     'STATE_HOUSE', 
     'COUNTY', 
     'RESIDENTIAL_CITY'
-] + [x.split('/')[-1].split('.')[0] for x in target_files_lst]
+]
+
+voter_file_column_lst = ['VOTER_ID', 'PRECINCT'] + demographic_criteria_lst
+crosstab_criteria_lst = demographic_criteria_lst + ['VOTED_PARTY', 'VOTE_METHOD',] + [x.split('/')[-1].split('.')[0] for x in target_files_lst]
 
 target_geographies_dict = {
     'State Senate 20': 'STATE_SENATE'
@@ -63,34 +66,35 @@ bq_project_location = 'us-west1'
 # bq_table_stem = bq_project_id + '.co_voterfile.'
 bq_dataset = 'co_voterfile'
 # bq_return_table_id = bq_table_stem + '2022-general-returns'
+bq_voters_table_name = f'voters_{str((date.today() + timedelta(-30)).year)}{((date.today() + timedelta(-30)).month):02d}01'
 bq_return_table_name = '2022-general-returns'
 # bq_table_id = bq_table_stem + 'voters_' + str(date.today().year) + f"{(date.today().month - 1):02d}" + '01'
-bq_voters_table_id = f'{bq_project_id}.{bq_dataset}.voters_{str(date.today().year)}{(date.today().month - 1):02d}01'
+bq_voters_table_id = f'{bq_project_id}.{bq_dataset}.{bq_voters_table_name}'
 bq_return_table_id = f'{bq_project_id}.{bq_dataset}.{bq_return_table_name}'
 
-bq_voter_str = '''
-SELECT
-    VOTER_ID,
-    COUNTY,
-    LAST_NAME,
-    FIRST_NAME,
-    MIDDLE_NAME,
-    NAME_SUFFIX,
-    RESIDENTIAL_CITY,
-    BIRTH_YEAR,
-    GENDER,
-    RACE,
-    AGE_RANGE,
-    PRECINCT,
-    PARTY,
-    REGISTRATION_DATE,
-    PREFERENCE,
-    CONGRESSIONAL,
-    STATE_SENATE,
-    STATE_HOUSE,
-    PVG,
-    PVP
-FROM `''' + bq_voters_table_id + '`'
+# bq_voter_str = '''
+# SELECT
+#     VOTER_ID,
+#     COUNTY,
+#     LAST_NAME,
+#     FIRST_NAME,
+#     MIDDLE_NAME,
+#     NAME_SUFFIX,
+#     RESIDENTIAL_CITY,
+#     BIRTH_YEAR,
+#     GENDER,
+#     RACE,
+#     AGE_RANGE,
+#     PRECINCT,
+#     PARTY,
+#     REGISTRATION_DATE,
+#     PREFERENCE,
+#     CONGRESSIONAL,
+#     STATE_SENATE,
+#     STATE_HOUSE,
+#     PVG,
+#     PVP
+# FROM `''' + bq_voters_table_id + '`'
 
 # bq_history_str = '''
 # SELECT *

@@ -1,7 +1,9 @@
 import zipfile
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+from google.cloud import bigquery_storage
+from google.cloud.bigquery_storage import BigQueryReadClient, types
 
 from config import *
 
@@ -28,6 +30,39 @@ def save_to_bq(_df, bq_table_schema, table_id, project_id=bq_project_id ):
     _df.to_gbq(destination_table=table_id, project_id=project_id, if_exists='replace', table_schema=bq_table_schema, credentials=bq_credentials)
 
 
+def read_bq_table(table_id: str, selected_fields: list):
+    table = f"projects/{bq_project_id}/datasets/{bq_dataset}/tables/{table_id}"
+
+    bqstorageclient = bigquery_storage.BigQueryReadClient(credentials=bq_credentials)
+
+    read_options = types.ReadSession.TableReadOptions(
+        selected_fields=selected_fields 
+    )
+
+    parent = f'projects/{bq_project_id}'
+
+    requested_session = types.ReadSession(
+        table=table,
+        data_format=types.DataFormat.ARROW,
+        read_options=read_options,
+    )
+    read_session = bqstorageclient.create_read_session(
+        parent=parent,
+        read_session=requested_session,
+        max_stream_count=1,
+    )
+
+    stream = read_session.streams[0]
+    reader = bqstorageclient.read_rows(stream.name)
+
+    frame_lst = []
+    for message in reader.rows().pages:
+        frame_lst.append(message.to_dataframe())
+    df = pd.concat(frame_lst)
+    
+    return df
+
+
 # Unzip return file
 def unzip(_file=return_zip):
     _file = zipfile.ZipFile(_file)
@@ -36,20 +71,22 @@ def unzip(_file=return_zip):
     
 
 # Load complete CO voter file
-def voters_to_df(bq_query_str=bq_voter_str):
-    _df = pd.read_gbq(bq_query_str, project_id=bq_project_id, location=bq_project_location, credentials=bq_credentials, progress_bar_type='tqdm')
+def voters_to_df():
+    _df = read_bq_table(bq_voters_table_name, voter_file_column_lst)
+    #_df = pd.read_gbq(bq_query_str, project_id=bq_project_id, location=bq_project_location, credentials=bq_credentials, progress_bar_type='tqdm')
     print(f"Total Registration: {len(_df):.0f}")
+
+    # Clean up voter file data types
+    _df = _df[_df['VOTER_ID'] != 'nan']
+    _df = _df.replace('nan', np.nan)
+    _df['VOTER_ID'] =  _df['VOTER_ID'].astype('float').astype('int64')
+    #_df['BIRTH_YEAR'] = _df['BIRTH_YEAR'].astype('float').astype('int64')
 
     # Replace minor party designations with 'OTH'
     _df.loc[((_df['PARTY'] != 'REP') & (_df['PARTY'] != 'DEM') & (_df['PARTY'] != 'UAF')), 'PARTY'] = 'OTH'
-    _df = _df.replace('nan', np.nan)
     _df.loc[((_df['PREFERENCE'] != 'REP') & (_df['PREFERENCE'] != 'DEM') & (_df['PREFERENCE'] != 'UAF') & (~_df['PREFERENCE'].isna())), 'PREFERENCE'] = 'OTH'
     _df['PREFERENCE'] = _df['PREFERENCE'] + ' Pref'
-
-    _df = _df[_df['VOTER_ID'] != 'nan']
-    _df['VOTER_ID'] =  _df['VOTER_ID'].astype('float').astype('int64')
-    _df['BIRTH_YEAR'] = _df['BIRTH_YEAR'].astype('float').astype('int64')
-
+    
     return _df
 
 
@@ -94,7 +131,6 @@ def returns_to_df(return_txt_file):
     ballots_sent_df['RECEIVED'] = ballots_sent_df['MAIL_BALLOT_RECEIVE_DATE']
 
     # Replace minor party designations with 'OTH'
-    ballots_sent_df.loc[((ballots_sent_df['PARTY'] != 'REP') & (ballots_sent_df['PARTY'] != 'DEM') & (ballots_sent_df['PARTY'] != 'UAF')), 'PARTY'] = 'OTH'
     ballots_sent_df.loc[((ballots_sent_df['VOTED_PARTY'] != 'REP') & (ballots_sent_df['VOTED_PARTY'] != 'DEM') & (ballots_sent_df['VOTED_PARTY'] != 'UAF') & (~ballots_sent_df['VOTED_PARTY'].isna())), 'VOTED_PARTY'] = 'OTH'
     ballots_sent_df['VOTED_PARTY'] = ballots_sent_df['VOTED_PARTY'] + ' Voted'
 
@@ -121,7 +157,7 @@ def returns_to_df(return_txt_file):
     # Narrow returned ballots frame to only those that have come back
     ballots_sent_df = ballots_sent_df[(ballots_sent_df['RECEIVED'].notnull())]
 
-    # Narrow returned ballots data frame to only date returned and Voter ID
+    # Narrow returned ballots data frame to only return info
     ballots_sent_df = ballots_sent_df[['VOTER_ID', 'RECEIVED', 'VOTE_METHOD', 'VOTED_PARTY']]
 
     # Make the date of voting column formatting standardized
