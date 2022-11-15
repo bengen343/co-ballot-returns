@@ -1,13 +1,13 @@
 import pandas as pd
+from flask import Flask
 
 from analyze_co_returns import calc_crosstabs
 from config import *
 from gcs_put import gcs_put
 from load_co_returns import (returns_to_df, unzip, vote_history_to_df,
                              voters_to_df)
-from transform_co_returns import calc_age, calc_pv, calc_race, calc_targets
 from sos_fetch import sos_fetch
-from flask import Flask
+from transform_co_returns import calc_age, calc_pv, calc_race, calc_targets
 
 app = Flask(__name__)
 
