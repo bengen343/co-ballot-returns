@@ -56,6 +56,13 @@ bq_return_table_name = '2022-general-returns'
 bq_voters_table_id = f'{bq_project_id}.{bq_dataset}.{bq_voters_table_name}'
 bq_return_table_id = f'{bq_project_id}.{bq_dataset}.{bq_return_table_name}'
 
+bq_returns_query_str = '''
+    SELECT
+        COUNT(VOTER_ID) AS returns
+    FROM `''' + bq_return_table_id + '''`
+    WHERE RECEIVED != 'nan'
+'''
+
 # Establish BigQuery credentials
 bq_account_creds = json.loads(os.environ.get('BQ_ACCOUNT_CREDS'))
 bq_credentials = service_account.Credentials.from_service_account_info(bq_account_creds, scopes=["https://www.googleapis.com/auth/cloud-platform"])

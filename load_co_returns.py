@@ -113,6 +113,10 @@ def returns_to_df(return_txt_file):
     ballots_sent_df.loc[((ballots_sent_df['VOTED_PARTY'] != 'REP') & (ballots_sent_df['VOTED_PARTY'] != 'DEM') & (ballots_sent_df['VOTED_PARTY'] != 'UAF') & (~ballots_sent_df['VOTED_PARTY'].isna())), 'VOTED_PARTY'] = 'OTH'
     ballots_sent_df['VOTED_PARTY'] = ballots_sent_df['VOTED_PARTY'] + ' Voted'
 
+    return ballots_sent_df
+
+
+def returns_to_gbq(ballots_sent_df):
     # Save the returns up to BigQuery
     for column in list(ballots_sent_df):
         if 'DATE' in column:
@@ -131,6 +135,7 @@ def returns_to_df(return_txt_file):
     
     print("Uploading returns to BigQuery.")
     bq_table_schema = create_bq_schema(ballots_sent_df)
+    ballots_sent_df = ballots_sent_df.drop_duplicates('VOTER_ID')
     save_to_bq(ballots_sent_df, bq_table_schema, bq_return_table_id, bq_project_id)
 
     # Narrow returned ballots frame to only those that have come back
