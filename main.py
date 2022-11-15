@@ -25,6 +25,7 @@ def main():
     bq_result = bq_client.query(bq_returns_query_str)
     bq_returns_int = bq_result.result().to_dataframe().loc[0, 'returns']
 
+    print(f"SoS Records: {sos_returns_int} GBQ Records: {bq_returns_int}")
     if sos_returns_int >= bq_returns_int:
         # We only updated BigQuery and carry out the remainder of the function if the Secretary of State data hasn't shrank.
         returns_df = returns_to_gbq(returns_df)
