@@ -53,25 +53,24 @@ def main():
         returns_df['CONGRESSIONAL'] = returns_df['PRECINCT'].apply(lambda x: 'Congressional ' + str(x)[:1])
         returns_df['STATE_SENATE'] = returns_df['PRECINCT'].apply(lambda x: 'State Senate ' + str(int(str(x)[1:3])))
         returns_df['STATE_HOUSE'] = returns_df['PRECINCT'].apply(lambda x: 'State House ' + str(int(str(x)[3:5])))
-        # Rename return columns so they don't conflict with voter file column names.
-        returns_df[['PVG', 'PVP', 'RACE', 'AGE_RANGE']] = np.nan
-        returns_df.columns = [f'RETURNS_{x}' for x in list(returns_df)]
         
         # Load the voters and their voting history from your data ware house.
         voters_df = voters_to_df(bq_voters_table_name, voter_file_col_lst, voters_integer_col_lst)
+        
+        # Rename return columns so they don't conflict with voter file column names.
+        returns_df[['PVG', 'PVP', 'RACE', 'AGE_RANGE']] = np.nan
+        returns_df.columns = [f'RETURNS_{x}' if x in list(voters_df) else x for x in list(returns_df)]
         # Match the various data sources together
         voters_df = pd.merge(voters_df, returns_df, how='outer', left_on='VOTER_ID', right_on='RETURNS_VOTER_ID')
         # Populate missing voter file fields with those that were able to be sourced from returns.
-        voters_df.rename(columns={'RETURNS_VOTED_PARTY': 'VOTED_PARTY', 'RETURNS_VOTE_METHOD': 'VOTE_METHOD'})
-        voters_df['VOTER_ID'].fillna(voters_df['RETURNS_VOTER_ID'])
-        for column in demographic_criteria_lst:
-            voters_df[column].fillna(voters_df['RETURNS_' + column])
+        for column in (demographic_criteria_lst + ['VOTER_ID']):
+            voters_df[column] = voters_df[column].fillna(voters_df['RETURNS_' + column])
 
         # Augment the voter registration data with additional demographic information
         print("Calculating targeted voters.")
         voters_df = calc_targets(voters_df, target_files_lst)
 
-        # Narrow voter filedataframe to only data of interest
+        # Narrow voter file dataframe to only data of interest.
         voters_df = voters_df.drop_duplicates('VOTER_ID')
         voters_df = voters_df[['VOTER_ID'] + crosstab_criteria_lst + ['PRECINCT', 'RECEIVED_DATE']]
 
