@@ -62,6 +62,7 @@ def main():
         # Match the various data sources together
         voters_df = pd.merge(voters_df, returns_df, how='outer', left_on='VOTER_ID', right_on='RETURNS_VOTER_ID')
         # Populate missing voter file fields with those that were able to be sourced from returns.
+        voters_df.rename(columns={'RETURNS_VOTED_PARTY': 'VOTED_PARTY', 'RETURNS_VOTE_METHOD': 'VOTE_METHOD'})
         voters_df['VOTER_ID'].fillna(voters_df['RETURNS_VOTER_ID'])
         for column in demographic_criteria_lst:
             voters_df[column].fillna(voters_df['RETURNS_' + column])
@@ -72,7 +73,7 @@ def main():
 
         # Narrow voter filedataframe to only data of interest
         voters_df = voters_df.drop_duplicates('VOTER_ID')
-        voters_df = voters_df[['VOTER_ID'] + crosstab_criteria_lst + ['PRECINCT', 'RECEIVED']]
+        voters_df = voters_df[['VOTER_ID'] + crosstab_criteria_lst + ['PRECINCT', 'RECEIVED_DATE']]
 
         # Run crosstabs on all registered voters
         print("Running Colorado registration crosstabs.")
