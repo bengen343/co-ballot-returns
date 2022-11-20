@@ -3,17 +3,19 @@ from ftplib import FTP_TLS
 
 from config import *
 
-# Secret variables
-ftp_user = os.environ.get('FTP_USER')
-ftp_pass = os.environ.get('FTP_PASS')
-
 _old_makepasv = FTP_TLS.makepasv
 def _new_makepasv(self):
     host,port = _old_makepasv(self)
     host = self.sock.getpeername()[0]
     return host,port
 
-def sos_fetch(ftp_address=ftp_address, ftp_user=ftp_user, ftp_pass=ftp_pass, ftp_directory=ftp_directory, ftp_file=return_zip):
+def sos_file_fetch(
+    ftp_address: str, 
+    ftp_user: str, 
+    ftp_pass: str, 
+    ftp_directory: str, 
+    ftp_file: str
+) -> str:
     FTP_TLS.makepasv = _new_makepasv
     
     ftps = FTP_TLS()
@@ -29,3 +31,5 @@ def sos_fetch(ftp_address=ftp_address, ftp_user=ftp_user, ftp_pass=ftp_pass, ftp
     local_file.close()
             
     ftps.quit()
+
+    return(f"Successfully downloaded {ftp_file}.")

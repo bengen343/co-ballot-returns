@@ -1,12 +1,12 @@
+import numpy as np
 import pandas as pd
 from flask import Flask
-from google.cloud import bigquery
 
 from analyze_co_returns import calc_crosstabs
 from config import *
-from gcs_put import gcs_put
-from load_co_returns import returns_to_df, returns_to_gbq, unzip, voters_to_df
-from sos_fetch import sos_fetch
+from extract_from_sos import returns_to_df, unzip, voters_to_df
+from fetch_from_sos import sos_file_fetch
+from load_to_gcp import gcs_put, save_to_bq
 from transform_co_returns import calc_targets
 
 app = Flask(__name__)
@@ -14,27 +14,57 @@ app = Flask(__name__)
 @app.route('/')
 def main():
     # Get the ballot returns from the Colorado Secretary of State FTP
-    sos_fetch()
+    sos_file_fetch(
+        ftp_address=ftp_address,
+        ftp_user=ftp_user,
+        ftp_pass=ftp_pass,
+        ftp_directory=ftp_directory,
+        ftp_file=return_zip
+    )
     
-    unzip(_file=return_zip)
-    returns_df = returns_to_df(return_txt_file)
-    sos_returns_int = len(returns_df[~returns_df['RECEIVED'].isna()])
+    # Unzip the return file and load it into a dataframe.
+    unzip(file_str=return_zip)
+    returns_df = returns_to_df(return_txt_file, returns_integer_col_lst)
+    # Calculate the current total returns by county and statewide.
+    sos_returns_df = pd.DataFrame(returns_df[~returns_df['RECEIVED_DATE'].isna()].value_counts('COUNTY').reset_index())
+    sos_returns_df.columns = ['COUNTY', 'SOS_RETURNS']
+    sos_returns_int = sos_returns_df['SOS_RETURNS'].sum()
+    
+    # Query BigQuery to receive the last total returns by county and statewide.
+    bq_returns_df = pd.read_gbq(
+        bq_returns_query_str, 
+        project_id=bq_project_name, 
+        location=bq_project_location, 
+        credentials=bq_credentials, 
+        progress_bar_type='tqdm'
+    )
+    bq_returns_int = bq_returns_df['BQ_RETURNS'].sum()
 
-    # Query BigQuery to ensure that the latest ballot return file contains new records.
-    bq_client = bigquery.Client(credentials=bq_credentials, project=bq_project_id)
-    bq_result = bq_client.query(bq_returns_query_str)
-    bq_returns_int = bq_result.result().to_dataframe().loc[0, 'returns']
-
-    print(f"SoS Records: {sos_returns_int} GBQ Records: {bq_returns_int}")
-    if sos_returns_int >= bq_returns_int:
-        # We only updated BigQuery and carry out the remainder of the function if the Secretary of State data hasn't shrank.
-        returns_df = returns_to_gbq(returns_df)
-
-        # Load the voters and their voting history from your data ware house
-        voters_df = voters_to_df()
-
+    return_counts_df = pd.merge(sos_returns_df, bq_returns_df, how='left', on='COUNTY')
+    return_counts_df['SOS-BQ'] = return_counts_df['SOS_RETURNS'] - return_counts_df['BQ_RETURNS']
+    
+    # We only updated BigQuery and carry out the remainder of the function if the Secretary of State data hasn't shrank.
+    print(f"SoS Records: {sos_returns_int:,} GBQ Records: {bq_returns_int:,} -- SoS has {(sos_returns_int - bq_returns_int):,} more records than GBQ.")
+    if ((sos_returns_int - bq_returns_int) > 50) & ((return_counts_df['SOS-BQ'] >= -50).all()):
+        save_to_bq(returns_df, bq_project_name, bq_return_table_name, returns_integer_col_lst)
+        # Narrow returned ballots data frame to only necessary return info.
+        returns_df = returns_df[['VOTER_ID', 'COUNTY', 'PRECINCT', 'GENDER', 'VOTE_METHOD', 'PARTY', 'PREFERENCE', 'VOTED_PARTY', 'RECEIVED_DATE']]
+        # Calculate district information that isn't already present in the return file. 
+        returns_df['CONGRESSIONAL'] = returns_df['PRECINCT'].apply(lambda x: 'Congressional ' + str(x)[:1])
+        returns_df['STATE_SENATE'] = returns_df['PRECINCT'].apply(lambda x: 'State Senate ' + str(int(str(x)[1:3])))
+        returns_df['STATE_HOUSE'] = returns_df['PRECINCT'].apply(lambda x: 'State House ' + str(int(str(x)[3:5])))
+        # Rename return columns so they don't conflict with voter file column names.
+        returns_df[['PVG', 'PVP', 'RACE', 'AGE_RANGE']] = np.nan
+        returns_df.columns = [f'RETURNS_{x}' for x in list(returns_df)]
+        
+        # Load the voters and their voting history from your data ware house.
+        voters_df = voters_to_df(bq_voters_table_name, voter_file_col_lst, voters_integer_col_lst)
         # Match the various data sources together
-        voters_df = pd.merge(voters_df, returns_df, how='left', on='VOTER_ID')
+        voters_df = pd.merge(voters_df, returns_df, how='outer', left_on='VOTER_ID', right_on='RETURNS_VOTER_ID')
+        # Populate missing voter file fields with those that were able to be sourced from returns.
+        voters_df['VOTER_ID'].fillna(voters_df['RETURNS_VOTER_ID'])
+        for column in demographic_criteria_lst:
+            voters_df[column].fillna(voters_df['RETURNS_' + column])
 
         # Augment the voter registration data with additional demographic information
         print("Calculating targeted voters.")
@@ -84,7 +114,7 @@ def main():
         outcome_str = "Updated successfully."
 
     else:
-        outcome_str = "New Secretary of State File contains fewer records than we already had."
+        outcome_str = "New Secretary of State File contains no significant updates."
     
     return(outcome_str)
 
