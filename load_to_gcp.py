@@ -23,7 +23,7 @@ def create_bq_schema(df: pd.DataFrame, integer_col_lst: list) -> list:
 
 
 def save_to_bq(df: pd.DataFrame, project_name:str, table_id: str, integer_col_lst: list) -> str:
-    print(f"Uploading {df} to BigQuery.")
+    print(f"Uploading dataframe to BigQuery.")
     # Create a schema to use for the BigQuery upload
     bq_table_schema = create_bq_schema(df, integer_col_lst)
 
