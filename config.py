@@ -63,7 +63,7 @@ bq_returns_query_str = '''
         COUNTY,
         COUNT(VOTER_ID) AS BQ_RETURNS
     FROM `''' + bq_return_table_id + '''`
-    WHERE RECEIVED_DATE != 'nan'
+    WHERE RECEIVED_DATE IS NOT NULL
     GROUP BY COUNTY
     ORDER BY COUNTY
 '''
