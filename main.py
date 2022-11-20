@@ -45,7 +45,7 @@ def main():
     
     # We only updated BigQuery and carry out the remainder of the function if the Secretary of State data hasn't shrank.
     print(f"SoS Records: {sos_returns_int:,} GBQ Records: {bq_returns_int:,} -- SoS has {(sos_returns_int - bq_returns_int):,} more records than GBQ.")
-    if ((sos_returns_int - bq_returns_int) > 50) & ((return_counts_df['SOS-BQ'] >= -50).all()):
+    if 1==1: #((sos_returns_int - bq_returns_int) > 50) & ((return_counts_df['SOS-BQ'] >= -50).all()):
         save_to_bq(returns_df, bq_project_name, bq_return_table_name, returns_integer_col_lst)
         # Narrow returned ballots data frame to only necessary return info.
         returns_df = returns_df[['VOTER_ID', 'COUNTY', 'PRECINCT', 'GENDER', 'VOTE_METHOD', 'PARTY', 'PREFERENCE', 'VOTED_PARTY', 'RECEIVED_DATE']]
