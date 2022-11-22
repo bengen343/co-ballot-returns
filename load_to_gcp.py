@@ -32,7 +32,7 @@ def save_to_bq(df: pd.DataFrame, project_name:str, table_id: str, integer_col_ls
 
     return(f"Successfully uploaded {df} to  BigQuery")
 
-def gcs_put(file: str, bucket_name) -> str:
+def gcs_put(file: str, bucket_name: str) -> str:
     client = storage.Client(project=bq_project_name)
     bucket = client.get_bucket(bucket_name)
     blob = bucket.blob(file)

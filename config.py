@@ -15,7 +15,7 @@ ftp_pass = os.environ.get('FTP_PASS')
 
 # Google Cloud Storage/Files Variables
 crosstabs_xlsx_file = r'2022COGeneralBallotsCast.xlsx'
-bucket_name = 'co-ballot-returns-artifacts'
+gcs_bucket_name = 'co-ballot-returns-artifacts'
 target_files_lst = [
     'gs://co-ballot-returns-artifacts/2022-general-universe-1.csv',
     'gs://co-ballot-returns-artifacts/2022-general-universe-2.csv',

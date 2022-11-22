@@ -109,7 +109,7 @@ def main():
         print("Excel Export Complete.")
 
         # Send the Excel file to Google Cloud Storage
-        gcs_put(crosstabs_xlsx_file)
+        gcs_put(crosstabs_xlsx_file, gcs_bucket_name)
 
         outcome_str = "Updated successfully."
 
