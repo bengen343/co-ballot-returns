@@ -79,7 +79,7 @@ def main():
         registration_crosstabs_df = calc_crosstabs(voters_df, crosstab_criteria_lst=crosstab_criteria_lst)
 
         # Create a new frame with only those individuals who have voted
-        ballots_cast_df = voters_df[voters_df['RECEIVED'].notnull()]
+        ballots_cast_df = voters_df[voters_df['RECEIVED_DATE'].notnull()]
         # Run crosstabs on those that have returned ballots
         print("Running Colorado ballots cast crosstabs.")
         ballots_crosstabs_df = calc_crosstabs(ballots_cast_df, crosstab_criteria_lst=crosstab_criteria_lst)
