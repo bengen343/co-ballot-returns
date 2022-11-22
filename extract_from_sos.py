@@ -85,8 +85,10 @@ def returns_to_df(return_txt_file: str, integer_col_lst: list) -> pd.DataFrame:
     df['MAIL_BALLOT_RECEIVE_DATE'] = df['MAIL_BALLOT_RECEIVE_DATE'].replace('11/08/0202', '11/08/2022')
     
     # Make sure datatypes are set correctly for return dataframe.
+    df['GENDER'] = df['GENDER'].str.title()
+    df['COUNTY'] = df['COUNTY'].str.title()
     df = set_dtypes_on(df, integer_col_lst)
-   
+    
     # Set a master date column for when the voter voted
     df['RECEIVED_DATE'] = pd.to_datetime(df['MAIL_BALLOT_RECEIVE_DATE'], errors='coerce')
     df['RECEIVED_DATE'].fillna(df['IN_PERSON_VOTE_DATE'], inplace=True)
