@@ -5,11 +5,6 @@ import pandas as pd
 from config import *
 
 
-def append_result(result_df: pd.DataFrame):
-    global crosstabs_df
-    crosstabs_df = pd.concat([crosstabs_df, result_df], axis=0, sort=False)
-
-
 def vertical_crosstab(vertical: str, crosstab_criteria_lst: list, df: pd.DataFrame) -> pd.DataFrame:
     horizontal_df = pd.DataFrame()
     print(f"Running cross tabs on vertical criteria: {vertical}")
@@ -23,13 +18,14 @@ def vertical_crosstab(vertical: str, crosstab_criteria_lst: list, df: pd.DataFra
 
 def async_crosstabs(crosstab_criteria_lst: list, df: pd.DataFrame):
     print(f"Starting crosstab calculation.")
-    global crosstabs_df
+    crosstabs_df = pd.DataFrame()
 
     pool = multiprocessing.Pool()
     vertical_crosstab_lst = crosstab_criteria_lst + ['PRECINCT']
     
     for vertical in vertical_crosstab_lst:
-        pool.apply_async(vertical_crosstab, args=(vertical, crosstab_criteria_lst, df), callback=append_result)
+        result = pool.apply_async(vertical_crosstab, args=(vertical, crosstab_criteria_lst, df))
+        crosstabs_df = pd.concat([crosstabs_df, result.get()], axis=0, sort=False)
     pool.close()
     pool.join()
     

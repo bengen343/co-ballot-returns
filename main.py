@@ -81,12 +81,10 @@ def main():
         voters_df = voters_df[['VOTER_ID'] + crosstab_criteria_lst + ['PRECINCT', 'RECEIVED_DATE']]
 
         # Run crosstabs on all registered voters
-        crosstabs_df = pd.DataFrame()
         registration_crosstabs_df = async_crosstabs(crosstab_criteria_lst, voters_df)
         registration_crosstabs_df.name = 'Registration Crosstabs'
 
         # Create a new frame with only those individuals who have voted
-        crosstabs_df = pd.DataFrame()
         ballots_cast_df = voters_df[voters_df['RECEIVED_DATE'].notnull()]
         ballots_cast_df.name = 'Ballots Cast Crosstabs'
         # Run crosstabs on those that have returned ballots
@@ -101,10 +99,8 @@ def main():
         # Create crosstabs for the registration and ballot returns of each target district
         for geography in target_geographies_dict.keys():
             print(f"Running {geography} registration crosstabs.")
-            crosstabs_df = pd.DataFrame()
             target_dataframes_dict[geography + ' Registration Crosstabs'] = async_crosstabs(crosstab_criteria_lst, target_dataframes_dict[geography + ' Registration'])
             print(f"Running {geography} ballots cast crosstabs.")
-            crosstabs_df = pd.DataFrame()
             target_dataframes_dict[geography + ' Ballots Cast Crosstabs'] = async_crosstabs(crosstab_criteria_lst, target_dataframes_dict[geography + ' Ballots Cast'])
 
         # Save ballots cast to Excel
