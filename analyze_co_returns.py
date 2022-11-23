@@ -23,6 +23,8 @@ def vertical_crosstab(vertical: str, crosstab_criteria_lst: list, df: pd.DataFra
 
 def async_crosstabs(crosstab_criteria_lst: list, df: pd.DataFrame):
     print(f"Starting crosstab calculation.")
+    global crosstabs_df
+
     pool = multiprocessing.Pool()
     vertical_crosstab_lst = crosstab_criteria_lst + ['PRECINCT']
     
