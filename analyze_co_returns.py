@@ -29,10 +29,9 @@ def async_crosstabs(crosstab_criteria_lst: list, df: pd.DataFrame):
     pool = multiprocessing.Pool()
     vertical_crosstab_lst = crosstab_criteria_lst + ['PRECINCT']
     
-    for vertical in vertical_crosstab_lst:
-        result = pool.apply_async(vertical_crosstab, args=(vertical, crosstab_criteria_lst, df))
-        crosstabs_df = pd.concat([crosstabs_df, result.get()], axis=0, sort=False)
+    results = [pool.apply_async(vertical_crosstab, args=(x, crosstab_criteria_lst, df)) for x in vertical_crosstab_lst]
     pool.close()
     pool.join()
+    crosstabs_df = pd.concat([p.get() for p in results], axis=0, sort=False)
     
     return crosstabs_df
