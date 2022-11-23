@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from flask import Flask
 
-from analyze_co_returns import calc_crosstabs
+from analyze_co_returns import async_crosstabs
 from config import *
 from extract_from_sos import returns_to_df, unzip, voters_to_df
 from fetch_from_sos import sos_file_fetch
@@ -25,8 +25,11 @@ def main():
     # Unzip the return file and load it into a dataframe.
     unzip(file_str=return_zip)
     returns_df = returns_to_df(return_txt_file, returns_integer_col_lst)
+    returns_df.name = 'Ballot File Returns'
+
     # Calculate the current total returns by county and statewide.
     sos_returns_df = pd.DataFrame(returns_df[~returns_df['RECEIVED_DATE'].isna()].value_counts('COUNTY').reset_index())
+    sos_returns_df.name = 'Ballot File County Returns'
     sos_returns_df.columns = ['COUNTY', 'SOS_RETURNS']
     sos_returns_int = sos_returns_df['SOS_RETURNS'].sum()
     
@@ -38,9 +41,11 @@ def main():
         credentials=bq_credentials, 
         progress_bar_type='tqdm'
     )
+    bq_returns_df.name = 'BigQuery Returns'
     bq_returns_int = bq_returns_df['BQ_RETURNS'].sum()
 
     return_counts_df = pd.merge(sos_returns_df, bq_returns_df, how='left', on='COUNTY')
+    return_counts_df.name = 'County Returns'
     return_counts_df['SOS-BQ'] = return_counts_df['SOS_RETURNS'] - return_counts_df['BQ_RETURNS']
     
     # We only updated BigQuery and carry out the remainder of the function if the Secretary of State data hasn't shrank.
@@ -56,7 +61,8 @@ def main():
         
         # Load the voters and their voting history from your data ware house.
         voters_df = voters_to_df(bq_voters_table_name, voter_file_col_lst, voters_integer_col_lst)
-        
+        voters_df.name = 'Voter File'
+
         # Rename return columns so they don't conflict with voter file column names.
         returns_df[['PVG', 'PVP', 'RACE', 'AGE_RANGE']] = np.nan
         returns_df.columns = [f'RETURNS_{x}' if x in list(voters_df) else x for x in list(returns_df)]
@@ -75,14 +81,14 @@ def main():
         voters_df = voters_df[['VOTER_ID'] + crosstab_criteria_lst + ['PRECINCT', 'RECEIVED_DATE']]
 
         # Run crosstabs on all registered voters
-        print("Running Colorado registration crosstabs.")
-        registration_crosstabs_df = calc_crosstabs(voters_df, crosstab_criteria_lst=crosstab_criteria_lst)
+        registration_crosstabs_df = async_crosstabs(crosstab_criteria_lst, voters_df)
+        registration_crosstabs_df.name = 'Registration Crosstabs'
 
         # Create a new frame with only those individuals who have voted
         ballots_cast_df = voters_df[voters_df['RECEIVED_DATE'].notnull()]
+        ballots_cast_df.name = 'Ballots Cast Crosstabs'
         # Run crosstabs on those that have returned ballots
-        print("Running Colorado ballots cast crosstabs.")
-        ballots_crosstabs_df = calc_crosstabs(ballots_cast_df, crosstab_criteria_lst=crosstab_criteria_lst)
+        ballots_crosstabs_df = async_crosstabs(crosstab_criteria_lst, voters_df)
 
         # Create a dictionary of target dataframes and populate them with registration and ballots cast for their districts
         target_dataframes_dict = {}
@@ -93,9 +99,9 @@ def main():
         # Create crosstabs for the registration and ballot returns of each target district
         for geography in target_geographies_dict.keys():
             print(f"Running {geography} registration crosstabs.")
-            target_dataframes_dict[geography + ' Registration Crosstabs'] = calc_crosstabs(target_dataframes_dict[geography + ' Registration'], crosstab_criteria_lst=crosstab_criteria_lst)
+            target_dataframes_dict[geography + ' Registration Crosstabs'] = async_crosstabs(crosstab_criteria_lst, target_dataframes_dict[geography + ' Registration'])
             print(f"Running {geography} ballots cast crosstabs.")
-            target_dataframes_dict[geography + ' Ballots Cast Crosstabs'] = calc_crosstabs(target_dataframes_dict[geography + ' Ballots Cast'], crosstab_criteria_lst=crosstab_criteria_lst)
+            target_dataframes_dict[geography + ' Ballots Cast Crosstabs'] = async_crosstabs(crosstab_criteria_lst, target_dataframes_dict[geography + ' Ballots Cast'])
 
 
         # Save ballots cast to Excel
