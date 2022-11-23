@@ -10,8 +10,14 @@ def vertical_crosstab(vertical: str, crosstab_criteria_lst: list, df: pd.DataFra
     print(f"Running cross tabs on vertical criteria: {vertical}")
     
     for horizontal in crosstab_criteria_lst:
-        horizontal_df = pd.concat([horizontal_df, pd.crosstab(df[vertical], df[horizontal], margins=True)], axis=1, sort=True)
-        del horizontal_df['All']
+        try:
+            horizontal_df = pd.concat([horizontal_df, pd.crosstab(df[vertical], df[horizontal], margins=True)], axis=1, sort=True)
+            del horizontal_df['All']
+        except Exception as e:
+            if 'concatenate' in str(e):
+                print(e)
+            else:
+                raise
         
     return horizontal_df
 
