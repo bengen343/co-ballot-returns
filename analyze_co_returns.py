@@ -22,6 +22,10 @@ def vertical_crosstab(vertical: str, crosstab_criteria_lst: list, df: pd.DataFra
     return horizontal_df
 
 
+def print_error(e):
+    print(e)
+
+
 def async_crosstabs(crosstab_criteria_lst: list, df: pd.DataFrame):
     processes_int = len(os.sched_getaffinity(0))
     crosstabs_df = pd.DataFrame()
@@ -30,7 +34,7 @@ def async_crosstabs(crosstab_criteria_lst: list, df: pd.DataFrame):
     
     with multiprocessing.Pool(processes=processes_int) as pool:
     
-        results = [pool.apply_async(vertical_crosstab, args=(x, crosstab_criteria_lst, df)) for x in vertical_crosstab_lst]
+        results = [pool.apply_async(vertical_crosstab, args=(x, crosstab_criteria_lst, df), error_callback=print_error) for x in vertical_crosstab_lst]
         crosstabs_df = pd.concat([p.get() for p in results], axis=0, sort=False)
     
     return crosstabs_df
