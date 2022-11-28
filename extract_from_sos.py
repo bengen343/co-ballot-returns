@@ -52,7 +52,7 @@ def unzip(file_str: str) -> str:
     file_str.extractall('.')
     file_str.close()
 
-    return(f"Successfully unzipped {file_str}.")
+    return print(f"Successfully unzipped {file_str}.")
     
 
 # Load complete CO voter file
@@ -65,6 +65,7 @@ def voters_to_df(bq_voters_table_name: str, voter_file_col_lst: list, integer_co
     
     # Replace minor party designations with 'OTH'
     df.loc[((df['PARTY'] != 'REP') & (df['PARTY'] != 'DEM') & (df['PARTY'] != 'UAF')), 'PARTY'] = 'OTH'
+    
     df.loc[((df['PREFERENCE'] != 'REP') & (df['PREFERENCE'] != 'DEM') & (df['PREFERENCE'] != 'UAF') & (~df['PREFERENCE'].isna())), 'PREFERENCE'] = 'OTH'
     df['PREFERENCE'] = df['PREFERENCE'] + ' Pref'
     

@@ -25,11 +25,9 @@ def main():
     # Unzip the return file and load it into a dataframe.
     unzip(file_str=return_zip)
     returns_df = returns_to_df(return_txt_file, returns_integer_col_lst)
-    returns_df.name = 'Ballot File Returns'
-
+    
     # Calculate the current total returns by county and statewide.
     sos_returns_df = pd.DataFrame(returns_df[~returns_df['RECEIVED_DATE'].isna()].value_counts('COUNTY').reset_index())
-    sos_returns_df.name = 'Ballot File County Returns'
     sos_returns_df.columns = ['COUNTY', 'SOS_RETURNS']
     sos_returns_int = sos_returns_df['SOS_RETURNS'].sum()
     
@@ -41,31 +39,31 @@ def main():
         credentials=bq_credentials, 
         progress_bar_type='tqdm'
     )
-    bq_returns_df.name = 'BigQuery Returns'
     bq_returns_int = bq_returns_df['BQ_RETURNS'].sum()
 
+    # Compare the last update to the most recently downloaded return file to check for differences.
     return_counts_df = pd.merge(sos_returns_df, bq_returns_df, how='left', on='COUNTY')
-    return_counts_df.name = 'County Returns'
     return_counts_df['SOS-BQ'] = return_counts_df['SOS_RETURNS'] - return_counts_df['BQ_RETURNS']
     
     # We only updated BigQuery and carry out the remainder of the function if the Secretary of State data hasn't shrank.
     print(f"SoS Records: {sos_returns_int:,} GBQ Records: {bq_returns_int:,} -- SoS has {(sos_returns_int - bq_returns_int):,} more records than GBQ.")
-    if 1==1: #((sos_returns_int - bq_returns_int) > 50) & ((return_counts_df['SOS-BQ'] >= -50).all()):
+    if ((sos_returns_int - bq_returns_int) > 50) & ((return_counts_df['SOS-BQ'] >= -50).all()):
         save_to_bq(returns_df, bq_project_name, bq_return_table_id, returns_integer_col_lst)
+        
         # Narrow returned ballots data frame to only necessary return info.
         returns_df = returns_df[['VOTER_ID', 'COUNTY', 'PRECINCT', 'GENDER', 'VOTE_METHOD', 'PARTY', 'PREFERENCE', 'VOTED_PARTY', 'RECEIVED_DATE']]
         # Calculate district information that isn't already present in the return file. 
-        returns_df['CONGRESSIONAL'] = returns_df['PRECINCT'].apply(lambda x: 'Congressional ' + str(x)[:1])
+        returns_df['CONGRESSIONAL'] = returns_df['PRECINCT'].apply(lambda x: 'Congressional ' + str(int(str(x)[:1])))
         returns_df['STATE_SENATE'] = returns_df['PRECINCT'].apply(lambda x: 'State Senate ' + str(int(str(x)[1:3])))
         returns_df['STATE_HOUSE'] = returns_df['PRECINCT'].apply(lambda x: 'State House ' + str(int(str(x)[3:5])))
         
-        # Load the voters and their voting history from your data ware house.
+        # Load the voters and their voting history from your data warehouse.
         voters_df = voters_to_df(bq_voters_table_name, voter_file_col_lst, voters_integer_col_lst)
-        voters_df.name = 'Voter File'
-
+        
         # Rename return columns so they don't conflict with voter file column names.
         returns_df[['PVG', 'PVP', 'RACE', 'AGE_RANGE']] = np.nan
         returns_df.columns = [f'RETURNS_{x}' if x in list(voters_df) else x for x in list(returns_df)]
+        
         # Match the various data sources together
         voters_df = pd.merge(voters_df, returns_df, how='outer', left_on='VOTER_ID', right_on='RETURNS_VOTER_ID')
         # Populate missing voter file fields with those that were able to be sourced from returns.
@@ -82,11 +80,9 @@ def main():
 
         # Run crosstabs on all registered voters
         registration_crosstabs_df = async_crosstabs(crosstab_criteria_lst, voters_df)
-        registration_crosstabs_df.name = 'Registration Crosstabs'
-
+        
         # Create a new frame with only those individuals who have voted
         ballots_cast_df = voters_df[voters_df['RECEIVED_DATE'].notnull()]
-        ballots_cast_df.name = 'Ballots Cast Crosstabs'
         # Run crosstabs on those that have returned ballots
         ballots_crosstabs_df = async_crosstabs(crosstab_criteria_lst, voters_df)
 
