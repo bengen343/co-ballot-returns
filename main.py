@@ -58,7 +58,7 @@ def main():
         returns_df['STATE_HOUSE'] = returns_df['PRECINCT'].apply(lambda x: 'State House ' + str(int(str(x)[3:5])))
         
         # Load the voters and their voting history from your data warehouse.
-        voters_df = voters_to_df(bq_voters_table_name, voter_file_col_lst, voters_integer_col_lst)
+        voters_df = voters_to_df(bq_voters_query_str, voters_integer_col_lst)
         
         # Rename return columns so they don't conflict with voter file column names.
         returns_df[['PVG', 'PVP', 'RACE', 'AGE_RANGE']] = np.nan

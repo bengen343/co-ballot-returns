@@ -53,10 +53,17 @@ target_geographies_dict = {
 bq_project_name = os.environ.get('BQ_PROJECT_ID')
 bq_project_location = 'us-west1'
 bq_dataset_name = 'co_voterfile'
-bq_voters_table_name = f'voters_{str((date.today() + timedelta(-30)).year)}{((date.today() + timedelta(-30)).month):02d}01'
+bq_voters_table_name = f'voters'
 bq_return_table_name = '2022-general-returns'
 bq_voters_table_id = f'{bq_project_name}.{bq_dataset_name}.{bq_voters_table_name}'
 bq_return_table_id = f'{bq_project_name}.{bq_dataset_name}.{bq_return_table_name}'
+
+bq_voters_query_str = f'''
+    SELECT
+        *
+    FROM `{bq_voters_table_id}`
+    WHERE VALID_TO_DATE IS NOT NULL
+'''
 
 bq_returns_query_str = '''
     SELECT

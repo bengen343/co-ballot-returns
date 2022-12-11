@@ -79,11 +79,6 @@ def returns_to_df(return_txt_file: str, integer_col_lst: list) -> pd.DataFrame:
     df = pd.DataFrame()
     df = pd.read_csv (return_txt_file, sep=',', encoding='cp437', index_col=None, header=0, low_memory=False, on_bad_lines='skip')
     print(f"Loaded the return file with {len(df):,} records.")
-
-    # These lines are a hard coded fix for some bad data, remove them in the future:
-    df['MAIL_BALLOT_RECEIVE_DATE'] = df['MAIL_BALLOT_RECEIVE_DATE'].replace('11/06/0202', '11/06/2022')
-    df['MAIL_BALLOT_RECEIVE_DATE'] = df['MAIL_BALLOT_RECEIVE_DATE'].replace('11/08/0200', '11/08/2022')
-    df['MAIL_BALLOT_RECEIVE_DATE'] = df['MAIL_BALLOT_RECEIVE_DATE'].replace('11/08/0202', '11/08/2022')
     
     # Make sure datatypes are set correctly for return dataframe.
     df['GENDER'] = df['GENDER'].str.title()
