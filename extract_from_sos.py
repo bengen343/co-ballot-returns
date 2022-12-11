@@ -77,7 +77,7 @@ def returns_to_df(return_txt_file: str, integer_col_lst: list) -> pd.DataFrame:
     # Import returned ballots to dataframe
     print("Loading returns to dataframe.")
     df = pd.DataFrame()
-    df = pd.read_csv (return_txt_file, sep='|', encoding='cp437', index_col=None, header=0, low_memory=False, on_bad_lines='skip')
+    df = pd.read_csv (return_txt_file, sep=',', encoding='cp437', index_col=None, header=0, low_memory=False, on_bad_lines='skip')
     print(f"Loaded the return file with {len(df):,} records.")
 
     # These lines are a hard coded fix for some bad data, remove them in the future:
