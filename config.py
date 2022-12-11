@@ -62,7 +62,7 @@ bq_voters_query_str = f'''
     SELECT
         *
     FROM `{bq_voters_table_id}`
-    WHERE VALID_TO_DATE IS NOT NULL
+    WHERE VALID_TO_DATE IS NULL
 '''
 
 bq_returns_query_str = '''
