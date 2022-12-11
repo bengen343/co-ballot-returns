@@ -56,8 +56,8 @@ def unzip(file_str: str) -> str:
     
 
 # Load complete CO voter file
-def voters_to_df(bq_voters_table_name: str, voter_file_col_lst: list, integer_col_lst: list) -> pd.DataFrame:
-    df = read_bq_table(bq_project_name, bq_dataset_name, bq_voters_table_name, voter_file_col_lst)
+def voters_to_df(bq_query_str: str, integer_col_lst: list) -> pd.DataFrame:
+    df = pd.read_gbq(bq_query_str, project_id=bq_project_name, location=bq_project_location, credentials=bq_credentials, progress_bar_type='tqdm')
     print(f"Total Registration: {len(df):,}")
 
     # Clean up voter file data types
