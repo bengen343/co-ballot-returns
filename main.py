@@ -84,7 +84,7 @@ def main():
         # Create a new frame with only those individuals who have voted
         ballots_cast_df = voters_df[voters_df['RECEIVED_DATE'].notnull()]
         # Run crosstabs on those that have returned ballots
-        ballots_crosstabs_df = async_crosstabs(crosstab_criteria_lst, voters_df)
+        ballots_crosstabs_df = async_crosstabs(crosstab_criteria_lst, ballots_cast_df)
 
         # Create a dictionary of target dataframes and populate them with registration and ballots cast for their districts
         target_dataframes_dict = {}
