@@ -23,14 +23,14 @@ def create_bq_schema(df: pd.DataFrame, integer_col_lst: list) -> list:
 
 
 def save_to_bq(df: pd.DataFrame, project_name:str, table_id: str, integer_col_lst: list) -> str:
-    print(f"Uploading dataframe to BigQuery.")
+    print("Uploading dataframe to BigQuery.")
     # Create a schema to use for the BigQuery upload
     bq_table_schema = create_bq_schema(df, integer_col_lst)
 
     # Upload the dataframe to BigQuery using the schema just created.
     df.to_gbq(destination_table=table_id, project_id=project_name, if_exists='replace', table_schema=bq_table_schema, credentials=bq_credentials)
 
-    return(f"Successfully uploaded {df} to  BigQuery")
+    return("Successfully uploaded to BigQuery")
 
 def gcs_put(file: str, bucket_name: str) -> str:
     client = storage.Client(project=bq_project_name)

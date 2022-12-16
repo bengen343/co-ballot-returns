@@ -23,7 +23,7 @@ def main():
     )
     
     # Unzip the return file and load it into a dataframe.
-    unzip(file_str=return_zip)
+    unzip(return_zip)
     returns_df = returns_to_df(return_txt_file, returns_integer_col_lst)
     
     # Calculate the current total returns by county and statewide.
@@ -33,10 +33,10 @@ def main():
     
     # Query BigQuery to receive the last total returns by county and statewide.
     bq_returns_df = pd.read_gbq(
-        bq_returns_query_str, 
-        project_id=bq_project_name, 
-        location=bq_project_location, 
-        credentials=bq_credentials, 
+        bq_returns_query_str,
+        project_id=bq_project_name,
+        location=bq_project_location,
+        credentials=bq_credentials,
         progress_bar_type='tqdm'
     )
     bq_returns_int = bq_returns_df['BQ_RETURNS'].sum()
@@ -62,13 +62,13 @@ def main():
         
         # Rename return columns so they don't conflict with voter file column names.
         returns_df[['PVG', 'PVP', 'RACE', 'AGE_RANGE']] = np.nan
-        returns_df.columns = [f'RETURNS_{x}' if x in list(voters_df) else x for x in list(returns_df)]
+        returns_df.columns = [f'RETURNS_{col}' if col in list(voters_df) else col for col in list(returns_df)]
         
         # Match the various data sources together
         voters_df = pd.merge(voters_df, returns_df, how='outer', left_on='VOTER_ID', right_on='RETURNS_VOTER_ID')
         # Populate missing voter file fields with those that were able to be sourced from returns.
-        for column in (demographic_criteria_lst + ['VOTER_ID']):
-            voters_df[column] = voters_df[column].fillna(voters_df['RETURNS_' + column])
+        for col in (demographic_criteria_lst + ['VOTER_ID']):
+            voters_df[col] = voters_df[col].fillna(voters_df['RETURNS_' + col])
 
         # Augment the voter registration data with additional demographic information
         print("Calculating targeted voters.")
