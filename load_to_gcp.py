@@ -1,4 +1,5 @@
 import pandas as pd
+import pandas_gbq
 from config import *
 from google.cloud import storage
 
@@ -28,7 +29,7 @@ def save_to_bq(df: pd.DataFrame, project_name:str, table_id: str, integer_col_ls
     bq_table_schema = create_bq_schema(df, integer_col_lst)
 
     # Upload the dataframe to BigQuery using the schema just created.
-    df.to_gbq(destination_table=table_id, project_id=project_name, if_exists='replace', table_schema=bq_table_schema, credentials=bq_credentials)
+    pandas_gbq.to_gbq(df, destination_table=table_id, project_id=project_name, if_exists='replace', table_schema=bq_table_schema, credentials=bq_credentials, progress_bar=True)
 
     return("Successfully uploaded to BigQuery")
 

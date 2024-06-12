@@ -3,7 +3,7 @@ import pandas as pd
 
 from analyze_co_returns import async_crosstabs
 from config import *
-from extract_from_sos import returns_to_df, unzip, voters_to_df
+from extract_from_sos import read_bq_table, returns_to_df, unzip, voters_to_df
 from fetch_from_sos import sos_file_fetch
 from load_to_gcp import gcs_put, save_to_bq
 from transform_co_returns import calc_targets
@@ -55,7 +55,9 @@ def main():
         returns_df['STATE_HOUSE'] = returns_df['PRECINCT'].apply(lambda x: 'State House ' + str(int(str(x)[3:5])))
         
         # Load the voters and their voting history from your data warehouse.
-        voters_df = voters_to_df(bq_voters_query_str, voters_integer_col_lst)
+        # voters_df = voters_to_df(bq_voters_query_str, voters_integer_col_lst)
+        print("Downloading current voter file.")
+        voters_df = read_bq_table(bq_project_name, bq_dataset_name, 'co-voters-current', voters_fields_lst)
         
         # Rename return columns so they don't conflict with voter file column names.
         returns_df[['PVG', 'PVP', 'RACE', 'AGE_RANGE']] = np.nan
@@ -103,7 +105,7 @@ def main():
         for geography in target_geographies_dict.keys():
             target_dataframes_dict.get(geography + ' Registration Crosstabs').to_excel(writer, geography + ' Registration')
             target_dataframes_dict.get(geography + ' Ballots Cast Crosstabs').to_excel(writer, geography + ' Ballots Cast')
-        writer.save()
+        writer.close()
         print("Excel Export Complete.")
 
         # Send the Excel file to Google Cloud Storage
