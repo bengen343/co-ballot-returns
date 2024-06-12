@@ -27,7 +27,7 @@ def print_error(e):
 
 
 def async_crosstabs(crosstab_criteria_lst: list, df: pd.DataFrame):
-    processes_int = len(os.sched_getaffinity(0))
+    processes_int = 4
     crosstabs_df = pd.DataFrame()
     vertical_crosstab_lst = crosstab_criteria_lst + ['PRECINCT']
     print(f"Starting crosstab calculation with {processes_int} workers.")

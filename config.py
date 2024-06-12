@@ -6,14 +6,14 @@ from google.oauth2 import service_account
 # FTP variables
 ftp_address = 'ftps.sos.state.co.us'
 ftp_directory = r'/CE-068_Voters_With_Ballots_List_Public/'
-return_zip = r'2022_General_CE-068_Voters_With_Ballots_Public_FINAL.zip'
-return_txt_file = r'FINAL_2022_General_CE-068_Voters_With_Ballots_Public.txt'
+return_zip = r'CE-068_Voters_With_Ballots_List_Public_25Jun_600021574_null.zip'
+return_txt_file = r'CE-068_Voters_With_Ballots_List_Public_25Jun_600021574_null.txt'
 # Secret variables
 ftp_user = os.environ.get('FTP_USER')
 ftp_pass = os.environ.get('FTP_PASS')
 
 # Google Cloud Storage/Files Variables
-crosstabs_xlsx_file = r'2022COGeneralBallotsCast.xlsx'
+crosstabs_xlsx_file = r'2024COPrumaryBallotsCast.xlsx'
 gcs_bucket_name = 'co-ballot-returns-artifacts'
 target_files_lst = [
     'gs://co-ballot-returns-artifacts/2022-general-universe-1.csv',
@@ -29,7 +29,6 @@ target_files_lst = [
 # Voter file variables
 demographic_criteria_lst = [
     'PARTY',
-    'PREFERENCE',
     'PVP', 
     'PVG',
     'GENDER',  
@@ -42,10 +41,12 @@ demographic_criteria_lst = [
 ]
 
 voter_file_col_lst = ['VOTER_ID', 'PRECINCT'] + demographic_criteria_lst
-crosstab_criteria_lst = demographic_criteria_lst + ['VOTED_PARTY', 'VOTE_METHOD'] + [x.split('/')[-1].split('.')[0] for x in target_files_lst]
+crosstab_criteria_lst = demographic_criteria_lst + ['VOTED_PARTY', 'VOTE_METHOD']
+    #+ [x.split('/')[-1].split('.')[0] for x in target_files_lst]
 
 target_geographies_dict = {
-    'State Senate 20': 'STATE_SENATE'
+    'Douglas': 'COUNTY',
+    'Congressional 4': 'CONGRESSIONAL'
 }
 
 # BQ Variables
@@ -53,7 +54,7 @@ bq_project_name = os.environ.get('BQ_PROJECT_ID')
 bq_project_location = 'us-west1'
 bq_dataset_name = 'co_voterfile'
 bq_voters_table_name = 'voters'
-bq_return_table_name = '2022-general-returns'
+bq_return_table_name = '2024-primary-returns'
 bq_voters_table_id = f'{bq_project_name}.{bq_dataset_name}.{bq_voters_table_name}'
 bq_return_table_id = f'{bq_project_name}.{bq_dataset_name}.{bq_return_table_name}'
 

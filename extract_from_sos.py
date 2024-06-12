@@ -66,9 +66,6 @@ def voters_to_df(bq_query_str: str, integer_col_lst: list) -> pd.DataFrame:
     # Replace minor party designations with 'OTH'
     df.loc[((df['PARTY'] != 'REP') & (df['PARTY'] != 'DEM') & (df['PARTY'] != 'UAF')), 'PARTY'] = 'OTH'
     
-    df.loc[((df['PREFERENCE'] != 'REP') & (df['PREFERENCE'] != 'DEM') & (df['PREFERENCE'] != 'UAF') & (~df['PREFERENCE'].isna())), 'PREFERENCE'] = 'OTH'
-    df['PREFERENCE'] = df['PREFERENCE'] + ' Pref'
-    
     return df
 
 
@@ -77,7 +74,7 @@ def returns_to_df(return_txt_file: str, integer_col_lst: list) -> pd.DataFrame:
     # Import returned ballots to dataframe
     print("Loading returns to dataframe.")
     df = pd.DataFrame()
-    df = pd.read_csv (return_txt_file, sep=',', encoding='cp437', index_col=None, header=0, low_memory=False, on_bad_lines='skip')
+    df = pd.read_csv (return_txt_file, sep='|', encoding='cp437', index_col=None, header=0, low_memory=False, on_bad_lines='skip')
     print(f"Loaded the return file with {len(df):,} records.")
     
     # Make sure datatypes are set correctly for return dataframe.
@@ -86,14 +83,13 @@ def returns_to_df(return_txt_file: str, integer_col_lst: list) -> pd.DataFrame:
     df = set_dtypes_on(df, integer_col_lst)
     
     # Set a master date column for when the voter voted
+    print("Setting ballot received date.")
     df['RECEIVED_DATE'] = pd.to_datetime(df['MAIL_BALLOT_RECEIVE_DATE'], errors='coerce')
     df['RECEIVED_DATE'].fillna(df['IN_PERSON_VOTE_DATE'], inplace=True)
 
     # Replace minor party designations with 'OTH'
+    print("Replace minor parties with OTH.")
     df.loc[((df['PARTY'] != 'REP') & (df['PARTY'] != 'DEM') & (df['PARTY'] != 'UAF') & (~df['PARTY'].isna())), 'PARTY'] = 'OTH'
-    
-    df.loc[((df['PREFERENCE'] != 'REP') & (df['PREFERENCE'] != 'DEM') & (df['PREFERENCE'] != 'UAF') & (~df['PREFERENCE'].isna())), 'PREFERENCE'] = 'OTH'
-    df['PREFERENCE'] = df['PREFERENCE'] + ' Pref'
     
     df.loc[((df['VOTED_PARTY'] != 'REP') & (df['VOTED_PARTY'] != 'DEM') & (df['VOTED_PARTY'] != 'UAF') & (~df['VOTED_PARTY'].isna())), 'VOTED_PARTY'] = 'OTH'
     df['VOTED_PARTY'] = df['VOTED_PARTY'] + ' Voted'

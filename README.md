@@ -29,6 +29,8 @@ This repository creates a Google Cloud Run service that can be run on a schedule
 
 The output of this repository is typically available for exploration during each election on our webpage at http://www.ConstellationPolitical.com
 
+In our configuration this repository is built by Google Cloud Build on a push to this GitHub repository and then executed as a Google Cloud Run Job.
+
 
 ## Getting Started <a name = "getting_started"></a>
 
@@ -68,13 +70,11 @@ git clone https://github.com/bengen343/co-ballot-returns.git
 
 3. Update `.env.template` with values for each of the variables requested. Note that the variable `BQ_ACCOUNT_CREDS` should be the entire output of the json credential file associated with the Google service account you're using for this project. Save this file as `.env` when you've added all your values.
 
-4. Create a virtual environment for the repository, probably by running `python3 -m venv .venv` in the terminal from the local directory. 
+4. Create a virtual environment for the repository, probably by running `python -m venv .venv` in the terminal from the local directory. 
 
 5. Activate the virtual environment, probably by running `.venv\Scripts\activate.bat` on Windows or `source .venv/bin/activate` on Mac.
 
 6. Install the required dependencies by running `pip install -r requirements.txt`
-
-End with an example of getting some data out of the system or using it for a little demo.
 
 
 ## Built Using <a name = "built_using"></a>

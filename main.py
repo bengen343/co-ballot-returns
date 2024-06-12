@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from flask import Flask
 
 from analyze_co_returns import async_crosstabs
 from config import *
@@ -9,9 +8,7 @@ from fetch_from_sos import sos_file_fetch
 from load_to_gcp import gcs_put, save_to_bq
 from transform_co_returns import calc_targets
 
-app = Flask(__name__)
 
-@app.route('/')
 def main():
     # Get the ballot returns from the Colorado Secretary of State FTP
     sos_file_fetch(
@@ -51,7 +48,7 @@ def main():
         save_to_bq(returns_df, bq_project_name, bq_return_table_id, returns_integer_col_lst)
         
         # Narrow returned ballots data frame to only necessary return info.
-        returns_df = returns_df[['VOTER_ID', 'COUNTY', 'PRECINCT', 'GENDER', 'VOTE_METHOD', 'PARTY', 'PREFERENCE', 'VOTED_PARTY', 'RECEIVED_DATE']]
+        returns_df = returns_df[['VOTER_ID', 'COUNTY', 'PRECINCT', 'GENDER', 'VOTE_METHOD', 'PARTY', 'VOTED_PARTY', 'RECEIVED_DATE']]
         # Calculate district information that isn't already present in the return file. 
         returns_df['CONGRESSIONAL'] = returns_df['PRECINCT'].apply(lambda x: 'Congressional ' + str(int(str(x)[:1])))
         returns_df['STATE_SENATE'] = returns_df['PRECINCT'].apply(lambda x: 'State Senate ' + str(int(str(x)[1:3])))
@@ -71,8 +68,8 @@ def main():
             voters_df[col] = voters_df[col].fillna(voters_df['RETURNS_' + col])
 
         # Augment the voter registration data with additional demographic information
-        print("Calculating targeted voters.")
-        voters_df = calc_targets(voters_df, target_files_lst)
+        # print("Calculating targeted voters.")
+        # voters_df = calc_targets(voters_df, target_files_lst)
 
         # Narrow voter file dataframe to only data of interest.
         voters_df = voters_df.drop_duplicates('VOTER_ID')
@@ -120,5 +117,4 @@ def main():
     return(outcome_str)
 
 if __name__ == '__main__':
-    from waitress import serve
-    serve(app, host='0.0.0.0', port=8080)
+    main()
