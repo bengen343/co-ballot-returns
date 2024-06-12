@@ -58,7 +58,6 @@ Last, but not least, you need to have your own authorization and credentials to 
 
 Unfortunately, this means this repository will only serve demonstrative purposes for most users.
 
-
 ### Installing
 
 1. Clone this repository to your local machine.
