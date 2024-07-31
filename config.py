@@ -6,8 +6,8 @@ from google.oauth2 import service_account
 # FTP variables
 ftp_address = 'ftps.sos.state.co.us'
 ftp_directory = r'/CE-068_Voters_With_Ballots_List_Public/'
-return_zip = r'CE-068_Voters_With_Ballots_List_Public_25Jun_600021574_null.zip'
-return_txt_file = r'CE-068_Voters_With_Ballots_List_Public_25Jun_600021574_null.txt'
+return_zip = r'2024_June_State_CE-068_Voters_With_Ballots_List_Public_FINAL.zip'
+return_txt_file = r'2024_June_State_CE-068_Voters_With_Ballots_List_Public_FINAL.txt'
 # Secret variables
 ftp_user = os.environ.get('FTP_USER')
 ftp_pass = os.environ.get('FTP_PASS')
